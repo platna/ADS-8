@@ -1,82 +1,61 @@
 // Copyright 2021 NNTU-CS
 #include "train.h"
+
 Train::Train() {
-    first = nullptr;
-    countOp = 0;
+  countOp = 0;
+  first = nullptr;
 }
+
 Train::~Train() {
-    if (IsEmpty()) {
-        return;
-    } else {
-        if (first->next->next != first) {
-            Cage* temp = first->next->next;
-            while (temp->next != first) {
-                delete temp->prev;
-                temp = temp->next;
-            }
-            delete first;
-        } else {
-            delete first->next;
-            delete first;
-        }
-    }
+  Cage* actual = first;
+  while (actual->next != first) {
+    Cage* t = actual;
+    actual = actual->next;
+    delete t;
+  }
 }
-Train::Cage* Train::create(bool l) {
-    Cage* cage = new Cage;
-    cage->next = nullptr;
-    cage->prev = nullptr;
-    cage->light = l;
-    return cage;
-}
-bool Train::IsEmpty() {
-    return first == nullptr;
-}
+
 void Train::addCage(bool light) {
-    Cage* temp;
-    if (IsEmpty()) {
-        first = create(light);
-    } else {
-        temp = first;
-        if (temp->next) {
-            while (temp->next != first) {
-                temp = temp->next;
-            }
-        }
-        temp->next = create(light);
-        temp->next->prev = temp;
-        temp->next->next = first;
-        first->prev = temp->next;
+  Cage* newcage = new Cage;
+  newcage->light = light;
+  newcage->next = nullptr;
+  if (first == nullptr) {
+    newcage->prev = nullptr;
+    first = newcage;
+    first->next = first;
+  } else {
+    Cage* actual = first;
+    while (actual->next != first) {
+      actual = actual->next;
     }
+    actual->next = newcage;
+    newcage->prev = actual;
+    newcage->next = first;
+    first->prev = newcage;
+  }
+}
+
+int Train::getLength() {
+  Cage* actual = first;
+  int len = 0;
+  actual->light = true;
+  while (true) {
+    actual = actual->next;
+    len++;
+    countOp++;
+    if (actual->light == true) {
+      actual->light = false;
+      int maximumlen = len;
+      len = 0;
+      for (int i = 0; i < maximumlen; i++) {
+        actual = actual->prev;
+        countOp++;
+      }
+      if (actual->light == false)
+        return maximumlen;
+    }
+  }
 }
 int Train::getOpCount() {
-    return countOp;
-}
-int Train::getLength() {
-    int lcount = 0;
-    int fake = 0;
-    int countCage = 1;
-    first->light = 1;
-    while (true) {
-        lcount++;
-        first = first->next;
-        countOp++;
-        countCage++;
-        if (first->light) {
-            first->light = 0;
-            fake = lcount;
-            while (lcount--) {
-                first = first->prev;
-                countOp++;
-            }
-            if (!first->light) {
-                return countCage - 1;
-            } else {
-                lcount = fake;
-                while (fake--) {
-                    first = first->next;
-                    countOp++;
-                }
-            }
-        }
-    }
+  return countOp;
 }
